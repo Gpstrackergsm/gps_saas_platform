@@ -255,7 +255,6 @@ export default function ClientDetailPage() {
                                         value={deviceId}
                                         onChange={(e) => setDeviceId(e.target.value)}
                                         placeholder="e.g. 123456789012345"
-                                        placeholder="e.g. 123456789012345"
                                         className="bg-zinc-800 border-zinc-700 text-white h-12"
                                         required
                                         autoFocus
