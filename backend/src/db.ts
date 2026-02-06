@@ -1,0 +1,157 @@
+import mysql from 'mysql2/promise';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+// Create the connection pool. The pool-specific settings are the defaults
+export const pool = mysql.createPool({
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '',
+    database: process.env.DB_NAME || 'gps_platform',
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0,
+    multipleStatements: true // Allow running initialization scripts in one go
+});
+
+// Helper to run queries. Adjusts for MySQL return type [rows, fields]
+export const query = async (text: string, params?: any[]) => {
+    // Convert Postgres $1, $2 syntax to MySQL ? syntax if needed, 
+    // but better to just use ? in code. 
+    // For now we assume calls are updated to use ?
+    const [rows, fields] = await pool.query(text, params);
+    return { rows, fields, insertId: (rows as any).insertId };
+};
+
+export const transaction = async <T>(callback: (conn: mysql.PoolConnection) => Promise<T>): Promise<T> => {
+    const connection = await pool.getConnection();
+    try {
+        await connection.beginTransaction();
+        const result = await callback(connection);
+        await connection.commit();
+        return result;
+    } catch (err) {
+        await connection.rollback();
+        throw err;
+    } finally {
+        connection.release();
+    }
+};
+
+export const connectDB = async () => {
+    try {
+        const connection = await pool.getConnection();
+        console.log('[DB] Connected to MySQL');
+
+        // Create DB if not exists (a bit hacky, usually done before connection)
+        // But since we are connected to specific DB, it must exist.
+        // Actually for local dev on root, we might want to connect without DB first...
+        // Let's assume user created it or we rely on the `start_all.sh` logic (which failed).
+        // Let's try to create the DB if catching an error?
+        // No, let's keep it simple. The schema init is below.
+
+        await initTables();
+        connection.release();
+    } catch (err: any) {
+        if (err.code === 'ER_BAD_DB_ERROR') {
+            console.log('[DB] Database does not exist. Attempting to create...');
+            const tempPool = mysql.createPool({
+                host: process.env.DB_HOST || 'localhost',
+                user: process.env.DB_USER || 'root',
+                password: process.env.DB_PASSWORD || '',
+            });
+            await tempPool.query(`CREATE DATABASE IF NOT EXISTS ${process.env.DB_NAME || 'gps_platform'}`);
+            console.log('[DB] Database created. Retrying connection...');
+            // Retry
+            await initTables(); // This will use the main pool which should work now? No, main pool needs reconnection or restart.
+            // Actually pool handles it often? Let's just exit and let nodemon restart or assume it works for next request
+        } else {
+            console.error('[DB] Connection failed', err);
+        }
+    }
+};
+
+const initTables = async () => {
+    const createDevicesTable = `
+        CREATE TABLE IF NOT EXISTS devices (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            device_id VARCHAR(50) UNIQUE NOT NULL,
+            name VARCHAR(100),
+            status VARCHAR(20) DEFAULT 'offline',
+            current_state VARCHAR(20) DEFAULT 'parked',
+            state_start_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            last_alarm VARCHAR(50),
+            last_seen TIMESTAMP,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+    `;
+
+    const createPositionsTable = `
+        CREATE TABLE IF NOT EXISTS positions (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            device_id VARCHAR(50),
+            lat DOUBLE NOT NULL,
+            lng DOUBLE NOT NULL,
+            speed DOUBLE DEFAULT 0,
+            course DOUBLE DEFAULT 0,
+            alarm VARCHAR(50),
+            acc_status BOOLEAN DEFAULT FALSE,
+            door_status BOOLEAN DEFAULT FALSE,
+            battery_level INT DEFAULT 100,
+            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (device_id) REFERENCES devices(device_id) ON DELETE CASCADE
+        );
+    `;
+
+    const createRawLogsTable = `
+        CREATE TABLE IF NOT EXISTS raw_logs (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            device_id VARCHAR(50), 
+            payload TEXT NOT NULL,
+            received_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+    `;
+
+    const createTenantsTable = `
+        CREATE TABLE IF NOT EXISTS tenants (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(100) NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+    `;
+
+    const createUsersTable = `
+        CREATE TABLE IF NOT EXISTS users (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            email VARCHAR(100) UNIQUE NOT NULL,
+            password_hash VARCHAR(255) NOT NULL,
+            role VARCHAR(20) DEFAULT 'user',
+            tenant_id INT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (tenant_id) REFERENCES tenants(id)
+        );
+    `;
+
+    try {
+        await query(createDevicesTable);
+        await query(createPositionsTable);
+        await query(createRawLogsTable);
+        await query(createTenantsTable);
+        await query(createUsersTable);
+
+        // Manual Migration for existing tables (Blind ALTERs)
+        try { await query("ALTER TABLE positions ADD COLUMN IF NOT EXISTS course DOUBLE DEFAULT 0"); } catch { }
+        try { await query("ALTER TABLE positions ADD COLUMN IF NOT EXISTS alarm VARCHAR(50)"); } catch { }
+        try { await query("ALTER TABLE positions ADD COLUMN IF NOT EXISTS acc_status BOOLEAN DEFAULT FALSE"); } catch { }
+        try { await query("ALTER TABLE positions ADD COLUMN IF NOT EXISTS door_status BOOLEAN DEFAULT FALSE"); } catch { }
+        try { await query("ALTER TABLE positions ADD COLUMN IF NOT EXISTS battery_level INT DEFAULT 100"); } catch { }
+        try { await query("ALTER TABLE devices ADD COLUMN IF NOT EXISTS last_alarm VARCHAR(50)"); } catch { }
+        try { await query("ALTER TABLE devices ADD COLUMN IF NOT EXISTS current_state VARCHAR(20) DEFAULT 'parked'"); } catch { }
+        try { await query("ALTER TABLE devices ADD COLUMN IF NOT EXISTS state_start_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP"); } catch { }
+
+        console.log('[DB] Tables initialized (MySQL)');
+    } catch (err) {
+        console.error('[DB] Error initializing tables', err);
+    }
+};

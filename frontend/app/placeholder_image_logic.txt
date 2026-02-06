@@ -1,0 +1,3 @@
+
+// This file is to trigger image generation if needed, but for now we proceed with code.
+// I will use `next/image` in the login page.
