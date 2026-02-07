@@ -29,9 +29,10 @@ import { pool } from './db';
 app.get('/db-check', async (req, res) => {
     try {
         const connection = await pool.getConnection();
-        const [rows] = await connection.query('SHOW TABLES');
+        const [tables] = await connection.query('SHOW TABLES');
+        const [columns] = await connection.query('DESCRIBE devices');
         connection.release();
-        res.json({ status: 'ok', tables: rows });
+        res.json({ status: 'ok', tables, columns });
     } catch (err: any) {
         res.status(500).json({ status: 'error', message: err.message, code: err.code });
     }
