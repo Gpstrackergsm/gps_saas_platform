@@ -150,11 +150,20 @@ const FleetItem = memo(({ item, onPress }: { item: Vehicle, onPress: (v: Vehicle
                 <StatusIcon size={24} color={statusColor} style={iconStyle} />
             </View>
             <View style={styles.infoContainer}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <Text style={styles.name}>{item.name || `Vehicle ${item.id.slice(-4)}`}</Text>
-                    <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
-                        <Signal size={14} color={item.internetStatus ? '#10B981' : '#9CA3AF'} />
-                        <Wifi size={14} color={item.gpsStatus ? '#10B981' : '#9CA3AF'} />
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <Text style={[styles.name, { flexShrink: 1 }]} numberOfLines={1}>
+                        {item.name || `Vehicle ${item.id.slice(-4)}`}
+                    </Text>
+                    <View style={{ flexDirection: 'row', marginLeft: 8, alignItems: 'center' }}>
+                        <Signal
+                            size={16}
+                            color={item.internetStatus ? '#10B981' : '#6B7280'}
+                            style={{ marginRight: 6 }}
+                        />
+                        <Wifi
+                            size={16}
+                            color={item.gpsStatus ? '#10B981' : '#6B7280'}
+                        />
                     </View>
                     {item.alarm && (
                         <View style={styles.alarmBadge}>
