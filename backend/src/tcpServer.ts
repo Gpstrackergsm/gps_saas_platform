@@ -34,7 +34,7 @@ const server = net.createServer((socket) => {
                 try {
                     // Update positions reference table
                     await pool.execute(
-                        'INSERT INTO positions (device_id, lat, lng, speed, course, alarm, acc_status, door_status, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                        'INSERT INTO positions (device_id, lat, lng, speed, course, alarm, acc_status, internet_status, gps_status, door_status, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                         [
                             parsed.deviceId,
                             parsed.lat,
@@ -43,6 +43,8 @@ const server = net.createServer((socket) => {
                             parsed.course || 0,
                             parsed.alarm || null,
                             parsed.accStatus || false,
+                            parsed.internetStatus || false,
+                            parsed.gpsStatus || false,
                             parsed.doorStatus || false,
                             parsed.timestamp
                         ]
@@ -66,6 +68,8 @@ const server = net.createServer((socket) => {
                         SET 
                             last_seen = ?, 
                             status = 'online',
+                            internet_status = ?,
+                            gps_status = ?,
                             state_start_time = CASE WHEN current_state != ? THEN ? ELSE state_start_time END,
                             current_state = ?
                             ${parsed.alarm ? ', last_alarm = ?' : ''}
@@ -74,6 +78,8 @@ const server = net.createServer((socket) => {
 
                     const updateParams = [
                         parsed.timestamp,
+                        parsed.internetStatus || false,
+                        parsed.gpsStatus || false,
                         newState, // Check against new state
                         parsed.timestamp, // If changed, set to now
                         newState, // Set new state
@@ -107,6 +113,8 @@ const server = net.createServer((socket) => {
                             course: parsed.course || 0,
                             alarm: parsed.alarm,
                             accStatus: parsed.accStatus,
+                            internetStatus: parsed.internetStatus,
+                            gpsStatus: parsed.gpsStatus,
                             state: newState,
                             stateStartTime: stateStartTimeISO, // Use ISO string
                             tripDistance: parsed.tripDistance || 0,
@@ -122,8 +130,8 @@ const server = net.createServer((socket) => {
                 // Update heartbeat/status only
                 try {
                     await pool.execute(
-                        'UPDATE devices SET last_seen = ?, status = ? WHERE device_id = ?',
-                        [parsed.timestamp, 'online', parsed.deviceId]
+                        'UPDATE devices SET last_seen = ?, status = ?, internet_status = ? WHERE device_id = ?',
+                        [parsed.timestamp, 'online', true, parsed.deviceId]
                     );
                     console.log(`   [DB] Updated heartbeat for ${parsed.deviceId}`);
                 } catch (err) {

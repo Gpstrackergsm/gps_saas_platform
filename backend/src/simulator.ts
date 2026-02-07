@@ -5,7 +5,7 @@ const PORT = 5001;
 
 const client = new net.Socket();
 
-const DEVICE_ID = '359586018966098';
+const DEVICE_ID = '123456789012345';
 const SIMULATION_INTERVAL_MS = 3000;
 
 // Configuration

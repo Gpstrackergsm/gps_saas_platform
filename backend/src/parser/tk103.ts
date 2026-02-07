@@ -11,6 +11,8 @@ export interface GPSData {
     // New Fields
     alarm?: string;
     accStatus?: boolean;
+    internetStatus?: boolean;
+    gpsStatus?: boolean;
     doorStatus?: boolean;
     batteryLevel?: number;
     tripDistance?: number;
@@ -42,6 +44,8 @@ export const parseTK103 = (inputRaw: string): GPSData | null => {
                 speed: parts[4] ? parseFloat(parts[4]) : 0,
                 // Parse ACC status (1 or 0) from 6th part, default to true if speed > 0
                 accStatus: parts[5] ? parts[5] === '1' : (parts[4] ? parseFloat(parts[4]) > 0 : false),
+                internetStatus: true,
+                gpsStatus: parts[7] ? parts[7] === '1' : true,
                 // Trip Distance
                 tripDistance: parts[6] ? parseFloat(parts[6]) : 0,
                 timestamp: new Date(), // Current time for simulator
@@ -152,6 +156,8 @@ const parseStandardData = (message: string): GPSData | null => {
             format: 'standard',
             alarm,
             accStatus,
+            internetStatus: true,
+            gpsStatus: parts[6] === 'A', // parts[6] is 'A' or 'V'
             doorStatus
         };
 
@@ -220,6 +226,8 @@ const parseHQData = (message: string): GPSData | null => {
             type,
             format: 'hq',
             accStatus,
+            internetStatus: true,
+            gpsStatus: parts[4] === 'A',
             doorStatus,
             alarm
         };

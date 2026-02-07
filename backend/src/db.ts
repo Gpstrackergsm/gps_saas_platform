@@ -85,6 +85,8 @@ const initTables = async () => {
             state_start_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             last_alarm VARCHAR(50),
             last_seen TIMESTAMP,
+            internet_status BOOLEAN DEFAULT FALSE,
+            gps_status BOOLEAN DEFAULT FALSE,
             tenant_id INT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
@@ -100,6 +102,8 @@ const initTables = async () => {
             course DOUBLE DEFAULT 0,
             alarm VARCHAR(50),
             acc_status BOOLEAN DEFAULT FALSE,
+            internet_status BOOLEAN DEFAULT FALSE,
+            gps_status BOOLEAN DEFAULT FALSE,
             door_status BOOLEAN DEFAULT FALSE,
             battery_level INT DEFAULT 100,
             timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -145,6 +149,10 @@ const initTables = async () => {
         await query(createUsersTable);
 
         // Manual Migration for existing tables (Blind ALTERs)
+        try { await query("ALTER TABLE positions ADD COLUMN internet_status BOOLEAN DEFAULT FALSE"); } catch { }
+        try { await query("ALTER TABLE positions ADD COLUMN gps_status BOOLEAN DEFAULT FALSE"); } catch { }
+        try { await query("ALTER TABLE devices ADD COLUMN internet_status BOOLEAN DEFAULT FALSE"); } catch { }
+        try { await query("ALTER TABLE devices ADD COLUMN gps_status BOOLEAN DEFAULT FALSE"); } catch { }
         try { await query("ALTER TABLE positions ADD COLUMN course DOUBLE DEFAULT 0"); } catch { }
         try { await query("ALTER TABLE positions ADD COLUMN alarm VARCHAR(50)"); } catch { }
         try { await query("ALTER TABLE positions ADD COLUMN acc_status BOOLEAN DEFAULT FALSE"); } catch { }

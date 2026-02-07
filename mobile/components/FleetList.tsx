@@ -1,6 +1,6 @@
 import React, { useState, useEffect, memo } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
-import { Navigation, CircleParking, MapPin } from 'lucide-react-native';
+import { Navigation, CircleParking, MapPin, Signal, Wifi } from 'lucide-react-native';
 import { GOOGLE_MAPS_API_KEY } from '../constants/Config';
 
 interface Vehicle {
@@ -17,6 +17,8 @@ interface Vehicle {
     current_state?: 'moving' | 'idling' | 'parked' | 'offline';
     state_start_time?: string | Date;
     trip_distance?: number;
+    internetStatus?: boolean;
+    gpsStatus?: boolean;
 }
 
 interface FleetListProps {
@@ -148,8 +150,12 @@ const FleetItem = memo(({ item, onPress }: { item: Vehicle, onPress: (v: Vehicle
                 <StatusIcon size={24} color={statusColor} style={iconStyle} />
             </View>
             <View style={styles.infoContainer}>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                     <Text style={styles.name}>{item.name || `Vehicle ${item.id.slice(-4)}`}</Text>
+                    <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
+                        <Signal size={14} color={item.internetStatus ? '#10B981' : '#9CA3AF'} />
+                        <Wifi size={14} color={item.gpsStatus ? '#10B981' : '#9CA3AF'} />
+                    </View>
                     {item.alarm && (
                         <View style={styles.alarmBadge}>
                             <Text style={styles.alarmText}>{item.alarm.toUpperCase()}</Text>
