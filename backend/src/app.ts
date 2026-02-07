@@ -42,10 +42,15 @@ app.get('/add-test-device', async (req, res) => {
     }
 });
 
-
-
-
-
-
+app.get('/clear-test-history', async (req, res) => {
+    try {
+        const connection = await pool.getConnection();
+        await connection.query("DELETE FROM positions WHERE device_id = '123456789012345'");
+        res.json({ status: 'ok', message: 'History cleared for test device' });
+        connection.release();
+    } catch (err: any) {
+        res.status(500).json({ status: 'error', message: err.message });
+    }
+});
 
 export default app;
