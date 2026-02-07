@@ -53,4 +53,15 @@ app.get('/clear-test-history', async (req, res) => {
     }
 });
 
+app.get('/clear-all-data', async (req, res) => {
+    try {
+        const connection = await pool.getConnection();
+        await connection.query("DELETE FROM positions");
+        res.json({ status: 'ok', message: 'All position data cleared' });
+        connection.release();
+    } catch (err: any) {
+        res.status(500).json({ status: 'error', message: err.message });
+    }
+});
+
 export default app;
