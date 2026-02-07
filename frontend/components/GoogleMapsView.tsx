@@ -177,7 +177,7 @@ export default function GoogleMapsView() {
             const start = `${historyDate} 00:00:00`;
             const end = `${historyDate} 23:59:59`;
 
-            const res = await api.get(`/devices/${selectedVehicle.id}/history`, {
+            const res = await api.get(`/devices/${selectedVehicle.device_id}/history`, {
                 params: { start, end }
             });
 
