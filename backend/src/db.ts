@@ -15,7 +15,7 @@ const dbConfig = process.env.DATABASE_URL || {
     multipleStatements: true
 };
 
-export const pool = mysql.createPool(dbConfig);
+export const pool = mysql.createPool(dbConfig as any);
 
 // Helper to run queries. Adjusts for MySQL return type [rows, fields]
 export const query = async (text: string, params?: any[]) => {
