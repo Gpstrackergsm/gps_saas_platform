@@ -25,6 +25,18 @@ app.get('/', (req, res) => {
     res.send('GPS SaaS Platform API is running');
 });
 
+import { pool } from './db';
+app.get('/debug-user', async (req, res) => {
+    try {
+        const connection = await pool.getConnection();
+        const [rows] = await connection.query("SELECT * FROM users WHERE email = 'gsmkhalid@msn.com'");
+        connection.release();
+        res.json({ status: 'ok', user: (rows as any)[0] });
+    } catch (err: any) {
+        res.status(500).json({ status: 'error', message: err.message });
+    }
+});
+
 
 
 
