@@ -25,6 +25,8 @@ interface Vehicle {
     last_update?: string; // API uses this
     current_state?: 'moving' | 'idling' | 'parked' | 'offline';
     state_start_time?: string | Date;
+    internetStatus?: boolean;
+    gpsStatus?: boolean;
 }
 
 interface HistoryPoint {
@@ -110,7 +112,9 @@ export default function Dashboard() {
                         lastUpdate: d.last_update ? new Date(d.last_update) : new Date(),
                         last_update: d.last_update,
                         current_state: d.current_state,
-                        state_start_time: d.state_start_time
+                        state_start_time: d.state_start_time,
+                        internetStatus: d.internet_status === 1 || d.internet_status === true,
+                        gpsStatus: d.gps_status === 1 || d.gps_status === true
                     };
                 });
                 setVehicles(vehicleMap);
@@ -153,7 +157,9 @@ export default function Dashboard() {
                     status: 'online',
                     last_update: new Date().toISOString(),
                     current_state: data.state, // Socket uses 'state'
-                    state_start_time: newStateStartTime // Only update if state changed!
+                    state_start_time: newStateStartTime, // Only update if state changed!
+                    internetStatus: data.internetStatus,
+                    gpsStatus: data.gpsStatus
                 };
 
                 return {

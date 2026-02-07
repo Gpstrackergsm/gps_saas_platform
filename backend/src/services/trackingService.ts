@@ -8,7 +8,10 @@ export interface LocationUpdate {
     course?: number;
     alarm?: string;
     accStatus?: boolean;
+    internetStatus?: boolean;
+    gpsStatus?: boolean;
     doorStatus?: boolean;
+    batteryLevel?: number;
     timestamp: Date;
     tripDistance?: number;
 }
@@ -17,7 +20,7 @@ export const processLocationUpdate = async (data: LocationUpdate, ioInstance: an
     try {
         // 1. Insert into positions table
         await pool.execute(
-            'INSERT INTO positions (device_id, lat, lng, speed, course, alarm, acc_status, door_status, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            'INSERT INTO positions (device_id, lat, lng, speed, course, alarm, acc_status, internet_status, gps_status, door_status, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
             [
                 data.deviceId,
                 data.lat,
@@ -26,6 +29,8 @@ export const processLocationUpdate = async (data: LocationUpdate, ioInstance: an
                 data.course || 0,
                 data.alarm || null,
                 data.accStatus || false,
+                data.internetStatus || false,
+                data.gpsStatus || false,
                 data.doorStatus || false,
                 data.timestamp
             ]
@@ -48,6 +53,8 @@ export const processLocationUpdate = async (data: LocationUpdate, ioInstance: an
             SET 
                 last_seen = ?, 
                 status = 'online',
+                internet_status = ?,
+                gps_status = ?,
                 state_start_time = CASE WHEN current_state != ? THEN ? ELSE state_start_time END,
                 current_state = ?
                 ${data.alarm ? ', last_alarm = ?' : ''}
@@ -56,6 +63,8 @@ export const processLocationUpdate = async (data: LocationUpdate, ioInstance: an
 
         const updateParams = [
             data.timestamp,
+            data.internetStatus || false,
+            data.gpsStatus || false,
             newState, // Check against new state
             data.timestamp, // If changed, set to now
             newState, // Set new state
@@ -69,7 +78,7 @@ export const processLocationUpdate = async (data: LocationUpdate, ioInstance: an
 
         // 4. Fetch the actual state_start_time from DB to ensure accuracy
         const [deviceRows]: any = await pool.query(
-            'SELECT current_state, state_start_time FROM devices WHERE device_id = ?',
+            'SELECT current_state, state_start_time, internet_status, gps_status FROM devices WHERE device_id = ?',
             [data.deviceId]
         );
 
@@ -86,6 +95,8 @@ export const processLocationUpdate = async (data: LocationUpdate, ioInstance: an
                 course: data.course || 0,
                 alarm: data.alarm,
                 accStatus: data.accStatus,
+                internetStatus: deviceRows[0]?.internet_status === 1,
+                gpsStatus: deviceRows[0]?.gps_status === 1,
                 state: newState,
                 stateStartTime: stateStartTimeISO,
                 tripDistance: data.tripDistance || 0,

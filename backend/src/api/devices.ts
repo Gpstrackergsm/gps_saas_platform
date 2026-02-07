@@ -62,7 +62,7 @@ import { processLocationUpdate } from '../services/trackingService';
 
 // SIMULATE Position Update (HTTP)
 router.post('/simulate', async (req, res) => {
-    const { deviceId, lat, lng, speed, course, alarm, accStatus, tripDistance } = req.body;
+    const { deviceId, lat, lng, speed, course, alarm, accStatus, tripDistance, internetStatus, gpsStatus } = req.body;
 
     // Allow simulation without auth for now
 
@@ -77,7 +77,9 @@ router.post('/simulate', async (req, res) => {
             alarm,
             accStatus,
             timestamp: new Date(),
-            tripDistance
+            tripDistance,
+            internetStatus,
+            gpsStatus
         }, io);
 
         res.json({ status: 'ok', message: 'Simulation data processed' });
