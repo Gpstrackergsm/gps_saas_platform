@@ -19,6 +19,7 @@ const defaultCenter = {
 
 interface Vehicle {
     id: string;
+    device_id: string;
     name: string;
     lat: number;
     lng: number;
