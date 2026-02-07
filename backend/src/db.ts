@@ -130,6 +130,7 @@ const initTables = async () => {
             email VARCHAR(100) UNIQUE NOT NULL,
             password_hash VARCHAR(255) NOT NULL,
             role VARCHAR(20) DEFAULT 'user',
+            phone VARCHAR(20),
             tenant_id INT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (tenant_id) REFERENCES tenants(id)
@@ -153,6 +154,7 @@ const initTables = async () => {
         try { await query("ALTER TABLE devices ADD COLUMN current_state VARCHAR(20) DEFAULT 'parked'"); } catch { }
         try { await query("ALTER TABLE devices ADD COLUMN state_start_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP"); } catch { }
         try { await query("ALTER TABLE devices ADD COLUMN tenant_id INT"); } catch { }
+        try { await query("ALTER TABLE users ADD COLUMN phone VARCHAR(20)"); } catch { }
 
         console.log('[DB] Tables initialized (MySQL)');
     } catch (err) {
