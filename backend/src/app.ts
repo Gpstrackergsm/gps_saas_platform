@@ -25,26 +25,6 @@ app.get('/', (req, res) => {
     res.send('GPS SaaS Platform API is running');
 });
 
-import { pool } from './db';
-app.get('/db-check', async (req, res) => {
-    try {
-        const connection = await pool.getConnection();
 
-        let migrationError = null;
-        try {
-            await connection.query("ALTER TABLE devices ADD COLUMN tenant_id INT");
-        } catch (e: any) {
-            migrationError = e.message;
-        }
-
-        const [tables] = await connection.query('SHOW TABLES');
-        const [columns] = await connection.query('DESCRIBE devices');
-        connection.release();
-
-        res.json({ status: 'ok', tables, columns, migrationError });
-    } catch (err: any) {
-        res.status(500).json({ status: 'error', message: err.message, code: err.code });
-    }
-});
 
 export default app;
