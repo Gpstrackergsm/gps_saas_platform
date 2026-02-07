@@ -8,7 +8,7 @@ import { useSocket } from '../../hooks/useSocket';
 import axios from 'axios';
 import { API_URL } from '../../constants/Config';
 import FleetList from '../../components/FleetList';
-import DateTimePicker from '@react-native-community/datetimepicker';
+// DateTimePicker temporarily removed to prevent native crash
 
 interface Vehicle {
     id: string;
@@ -565,12 +565,13 @@ export default function Dashboard() {
                             <View style={styles.modalBg}>
                                 <View style={styles.modalContent}>
                                     <Text style={styles.modalTitle}>Sélectionner {pickerStep === 'start' ? 'Début' : 'Fin'}</Text>
-                                    <DateTimePicker
-                                        value={new Date()}
-                                        mode="date"
-                                        display="spinner"
-                                        onChange={(event, date) => date && onDateSelect(date)}
-                                    />
+                                    <View style={{ height: 200, justifyContent: 'center', alignItems: 'center' }}>
+                                        <Text style={{ color: '#6B7280', textAlign: 'center' }}>
+                                            Recherche du calendrier...
+                                            {"\n"}
+                                            (Nécessite une mise à jour de l'app)
+                                        </Text>
+                                    </View>
                                     <TouchableOpacity style={styles.closeBtn} onPress={() => setDatePickerVisible(false)}>
                                         <Text style={styles.closeBtnText}>Annuler</Text>
                                     </TouchableOpacity>
