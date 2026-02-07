@@ -253,6 +253,17 @@ export default function GoogleMapsView() {
         }
     };
 
+    // Auto-track selected vehicle
+    useEffect(() => {
+        if (selectedVehicle && vehicles[selectedVehicle.id]) {
+            const v = vehicles[selectedVehicle.id];
+            // Only update current center if we are not in history mode
+            if (!isHistoryMode) {
+                setCenter({ lat: v.lat, lng: v.lng });
+            }
+        }
+    }, [selectedVehicle, vehicles, isHistoryMode]);
+
     const onUnmount = useCallback(function callback(map: google.maps.Map) {
         setMap(null);
     }, []);
