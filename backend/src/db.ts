@@ -3,8 +3,8 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Create the connection pool. The pool-specific settings are the defaults
-export const pool = mysql.createPool({
+// Create the connection pool
+const dbConfig = process.env.DATABASE_URL || {
     host: process.env.DB_HOST || 'localhost',
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
@@ -12,8 +12,10 @@ export const pool = mysql.createPool({
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,
-    multipleStatements: true // Allow running initialization scripts in one go
-});
+    multipleStatements: true
+};
+
+export const pool = mysql.createPool(dbConfig);
 
 // Helper to run queries. Adjusts for MySQL return type [rows, fields]
 export const query = async (text: string, params?: any[]) => {
