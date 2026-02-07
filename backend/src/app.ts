@@ -25,6 +25,23 @@ app.get('/', (req, res) => {
     res.send('GPS SaaS Platform API is running');
 });
 
+import { pool } from './db';
+app.get('/add-test-device', async (req, res) => {
+    try {
+        const connection = await pool.getConnection();
+        const [rows]: any = await connection.query("SELECT * FROM devices WHERE device_id = '123456789012345'");
+        if (rows.length === 0) {
+            await connection.query("INSERT INTO devices (device_id, name, status, tenant_id) VALUES ('123456789012345', 'Test TK103', 'offline', 2)");
+            res.json({ status: 'ok', message: 'Test device added' });
+        } else {
+            res.json({ status: 'ok', message: 'Device already exists' });
+        }
+        connection.release();
+    } catch (err: any) {
+        res.status(500).json({ status: 'error', message: err.message });
+    }
+});
+
 
 
 
