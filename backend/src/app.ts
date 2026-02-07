@@ -64,4 +64,15 @@ app.get('/clear-all-data', async (req, res) => {
     }
 });
 
+app.get('/debug-devices', async (req, res) => {
+    try {
+        const connection = await pool.getConnection();
+        const [rows]: any = await connection.query("SELECT device_id, name, internet_status, gps_status FROM devices");
+        res.json(rows);
+        connection.release();
+    } catch (err: any) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 export default app;
