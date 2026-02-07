@@ -239,6 +239,7 @@ export default function GoogleMapsView() {
 
                 vehicleMap[d.device_id] = {
                     id: d.device_id,
+                    device_id: d.device_id,
                     name: d.name || d.device_id, // Fallback to ID if name missing
                     lat: hasLocation ? d.lat : (defaultCenter.lat + jitter()),
                     lng: hasLocation ? d.lng : (defaultCenter.lng + jitter()),
