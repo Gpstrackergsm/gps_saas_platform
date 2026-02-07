@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_URL || 'https://gpssaasplatform-production.up.railway.app/api',
+    baseURL: 'https://gpssaasplatform-production.up.railway.app/api',
     headers: {
         'Content-Type': 'application/json',
     },
