@@ -32,7 +32,7 @@ app.get('/db-check', async (req, res) => {
 
         let migrationError = null;
         try {
-            await connection.query("ALTER TABLE devices ADD COLUMN IF NOT EXISTS tenant_id INT");
+            await connection.query("ALTER TABLE devices ADD COLUMN tenant_id INT");
         } catch (e: any) {
             migrationError = e.message;
         }

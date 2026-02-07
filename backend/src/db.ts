@@ -144,15 +144,15 @@ const initTables = async () => {
         await query(createUsersTable);
 
         // Manual Migration for existing tables (Blind ALTERs)
-        try { await query("ALTER TABLE positions ADD COLUMN IF NOT EXISTS course DOUBLE DEFAULT 0"); } catch { }
-        try { await query("ALTER TABLE positions ADD COLUMN IF NOT EXISTS alarm VARCHAR(50)"); } catch { }
-        try { await query("ALTER TABLE positions ADD COLUMN IF NOT EXISTS acc_status BOOLEAN DEFAULT FALSE"); } catch { }
-        try { await query("ALTER TABLE positions ADD COLUMN IF NOT EXISTS door_status BOOLEAN DEFAULT FALSE"); } catch { }
-        try { await query("ALTER TABLE positions ADD COLUMN IF NOT EXISTS battery_level INT DEFAULT 100"); } catch { }
-        try { await query("ALTER TABLE devices ADD COLUMN IF NOT EXISTS last_alarm VARCHAR(50)"); } catch { }
-        try { await query("ALTER TABLE devices ADD COLUMN IF NOT EXISTS current_state VARCHAR(20) DEFAULT 'parked'"); } catch { }
-        try { await query("ALTER TABLE devices ADD COLUMN IF NOT EXISTS state_start_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP"); } catch { }
-        try { await query("ALTER TABLE devices ADD COLUMN IF NOT EXISTS tenant_id INT"); } catch { }
+        try { await query("ALTER TABLE positions ADD COLUMN course DOUBLE DEFAULT 0"); } catch { }
+        try { await query("ALTER TABLE positions ADD COLUMN alarm VARCHAR(50)"); } catch { }
+        try { await query("ALTER TABLE positions ADD COLUMN acc_status BOOLEAN DEFAULT FALSE"); } catch { }
+        try { await query("ALTER TABLE positions ADD COLUMN door_status BOOLEAN DEFAULT FALSE"); } catch { }
+        try { await query("ALTER TABLE positions ADD COLUMN battery_level INT DEFAULT 100"); } catch { }
+        try { await query("ALTER TABLE devices ADD COLUMN last_alarm VARCHAR(50)"); } catch { }
+        try { await query("ALTER TABLE devices ADD COLUMN current_state VARCHAR(20) DEFAULT 'parked'"); } catch { }
+        try { await query("ALTER TABLE devices ADD COLUMN state_start_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP"); } catch { }
+        try { await query("ALTER TABLE devices ADD COLUMN tenant_id INT"); } catch { }
 
         console.log('[DB] Tables initialized (MySQL)');
     } catch (err) {
