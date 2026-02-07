@@ -62,6 +62,7 @@ import { processLocationUpdate } from '../services/trackingService';
 
 // SIMULATE Position Update (HTTP)
 router.post('/simulate', async (req, res) => {
+    console.log('[SIMULATE] Payload Received:', JSON.stringify(req.body));
     const { deviceId, lat, lng, speed, course, alarm, accStatus, tripDistance, internetStatus, gpsStatus } = req.body;
 
     // Allow simulation without auth for now
