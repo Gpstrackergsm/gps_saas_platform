@@ -58,4 +58,33 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
     }
 });
 
+import { io } from '../index';
+import { processLocationUpdate } from '../services/trackingService';
+
+// SIMULATE Position Update (HTTP)
+router.post('/simulate', async (req, res) => {
+    const { deviceId, lat, lng, speed, course, alarm, accStatus, tripDistance } = req.body;
+
+    // Allow simulation without auth for now (or use a secret if needed, but for MVP open is fine for this specific endpoint if hidden)
+    // Actually, let's just allow it for testing.
+
+    try {
+        await processLocationUpdate({
+            deviceId,
+            lat,
+            lng,
+            speed,
+            course,
+            alarm,
+            accStatus,
+            timestamp: new Date(),
+            tripDistance
+        }, io);
+
+        res.json({ status: 'ok', message: 'Simulation data processed' });
+    } catch (err: any) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 export default router;

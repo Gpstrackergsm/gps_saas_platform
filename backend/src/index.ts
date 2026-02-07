@@ -23,6 +23,9 @@ io.on('connection', (socket) => {
     socket.on('disconnect', () => console.log('[Socket] Client disconnected:', socket.id));
 });
 
+// Avoid circular dependency by attaching io to app
+app.set('io', io);
+
 // Start TCP Server
 // Start TCP Server
 startTcpServer(io);
