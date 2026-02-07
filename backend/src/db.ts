@@ -85,6 +85,7 @@ const initTables = async () => {
             state_start_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             last_alarm VARCHAR(50),
             last_seen TIMESTAMP,
+            tenant_id INT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
     `;
@@ -151,6 +152,7 @@ const initTables = async () => {
         try { await query("ALTER TABLE devices ADD COLUMN IF NOT EXISTS last_alarm VARCHAR(50)"); } catch { }
         try { await query("ALTER TABLE devices ADD COLUMN IF NOT EXISTS current_state VARCHAR(20) DEFAULT 'parked'"); } catch { }
         try { await query("ALTER TABLE devices ADD COLUMN IF NOT EXISTS state_start_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP"); } catch { }
+        try { await query("ALTER TABLE devices ADD COLUMN IF NOT EXISTS tenant_id INT"); } catch { }
 
         console.log('[DB] Tables initialized (MySQL)');
     } catch (err) {
