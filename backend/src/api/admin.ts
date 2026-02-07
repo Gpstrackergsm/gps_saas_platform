@@ -116,7 +116,7 @@ router.get('/clients', authenticateToken, requireAdmin, async (req: AuthRequest,
             FROM users u
             JOIN tenants t ON u.tenant_id = t.id
             LEFT JOIN devices d ON d.tenant_id = t.id
-            WHERE u.role != 'admin' OR u.email != 'gsmkhalid@msn.com' 
+            WHERE u.role != 'admin' 
             GROUP BY u.id, t.name, u.email, u.phone, u.role, u.tenant_id
             ORDER BY u.created_at DESC
         `);
