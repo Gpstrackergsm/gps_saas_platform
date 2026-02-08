@@ -152,7 +152,7 @@ const FleetItem = memo(({ item, onPress }: { item: Vehicle, onPress: (v: Vehicle
             <View style={styles.infoContainer}>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <Text style={[styles.name, { flexShrink: 1 }]} numberOfLines={1}>
-                        {item.name || `Vehicle ${item.id.slice(-4)}`} (V2)
+                        {item.name || `Vehicle ${item.id.slice(-4)}`}
                     </Text>
                     <View style={{ flexDirection: 'row', marginLeft: 8, alignItems: 'center' }}>
                         <Signal
