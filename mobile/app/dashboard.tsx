@@ -184,6 +184,7 @@ export default function Dashboard() {
     };
 
     const [historyPath, setHistoryPath] = useState<HistoryPoint[]>([]);
+    const [historySegments, setHistorySegments] = useState<HistoryPoint[][]>([]);
     const [datePickerVisible, setDatePickerVisible] = useState(false);
     const [pickerStep, setPickerStep] = useState<'start' | 'end'>('start');
     const [customStartDate, setCustomStartDate] = useState<Date | null>(null);
@@ -235,6 +236,40 @@ export default function Dashboard() {
             }));
 
             setHistoryPath(path);
+
+            // PROCESS SCATTERED SEGMENTS (Split on time gap > 5min or distance > 1km)
+            const segments: HistoryPoint[][] = [];
+            let currentSegment: HistoryPoint[] = [];
+
+            path.forEach((p, i) => {
+                if (i === 0) {
+                    currentSegment.push(p);
+                    return;
+                }
+
+                const prev = path[i - 1];
+                const timeDiff = new Date(p.timestamp).getTime() - new Date(prev.timestamp).getTime();
+
+                // Calculate distance for jump detection (Haversine simpler version)
+                const R = 6371;
+                const dLat = (p.latitude - prev.latitude) * Math.PI / 180;
+                const dLon = (p.longitude - prev.longitude) * Math.PI / 180;
+                const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                    Math.cos(prev.latitude * Math.PI / 180) * Math.cos(p.latitude * Math.PI / 180) *
+                    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+                const districtKm = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)) * R;
+
+                // Split if gap > 5 mins OR distance > 1km (Teleportation check)
+                if (timeDiff > 5 * 60 * 1000 || districtKm > 1.0) {
+                    if (currentSegment.length > 0) segments.push(currentSegment);
+                    currentSegment = [p];
+                } else {
+                    currentSegment.push(p);
+                }
+            });
+            if (currentSegment.length > 0) segments.push(currentSegment);
+            setHistorySegments(segments);
+
             setSelectedPoints([]); // Reset selection on new fetch
 
             if (path.length > 0 && mapRef.current) {
@@ -483,11 +518,14 @@ export default function Dashboard() {
 
                             {historyPath.length > 0 && (
                                 <>
-                                    <Polyline
-                                        coordinates={historyPath.map(p => ({ latitude: p.latitude, longitude: p.longitude }))}
-                                        strokeColor="#4F46E5"
-                                        strokeWidth={4}
-                                    />
+                                    {historySegments.map((segment, index) => (
+                                        <Polyline
+                                            key={`poly-${index}`}
+                                            coordinates={segment.map(p => ({ latitude: p.latitude, longitude: p.longitude }))}
+                                            strokeColor="#4F46E5"
+                                            strokeWidth={4}
+                                        />
+                                    ))}
                                     {historyPath.filter((_, i) => i % 10 === 0 || i === 0 || i === historyPath.length - 1).map((point, index) => {
                                         const isSelected = selectedPoints.some(p => p.id === point.id);
                                         return (
