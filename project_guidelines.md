@@ -37,3 +37,9 @@
 1. **Always verify connectivity** to the production backend first.
 2. **Check `Config.ts`** to ensure the app is pointing to the correct online environment.
 3. **Assume testing on a physical iPhone** and ensure network configurations support this.
+
+## 🚀 Deployment Strategy
+- **Auto-Push to GitHub**:
+  - Whenever a task, bug fix, or feature is completed and verified, **automatically push the changes to GitHub** (`origin master` or `origin main`).
+  - **DO NOT ask for permission** to push. The user expects continuous integration with Railway.
+  - Ensure the commit message is descriptive (e.g., `fix: resolve history jumping issue`).
