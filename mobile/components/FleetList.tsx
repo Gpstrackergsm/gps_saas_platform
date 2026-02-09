@@ -72,98 +72,95 @@ const FleetItem = memo(({ item, onPress }: { item: Vehicle, onPress: (v: Vehicle
         return () => clearInterval(interval);
     }, [item.state_start_time, item.lastUpdate]);
 
-    updateDuration();
-    const interval = setInterval(updateDuration, 1000);
-    return () => clearInterval(interval);
-}, [item.state_start_time]);
 
-// Geocoding with simple caching
-useEffect(() => {
-    const fetchAddress = async () => {
-        if (lastFetchCoords) {
-            const diffLat = Math.abs(item.lat - lastFetchCoords.lat);
-            const diffLng = Math.abs(item.lng - lastFetchCoords.lng);
-            if (diffLat < 0.0005 && diffLng < 0.0005) return;
-        }
 
-        try {
-            const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${item.lat},${item.lng}&key=${GOOGLE_MAPS_API_KEY}&region=MA`;
-            const res = await fetch(url);
-            const data = await res.json();
-
-            if (data.results?.[0]) {
-                setAddress(data.results[0].formatted_address.replace(', Maroc', ''));
-                setLastFetchCoords({ lat: item.lat, lng: item.lng });
-            } else {
-                setAddress('Adresse inconnue');
+    // Geocoding with simple caching
+    useEffect(() => {
+        const fetchAddress = async () => {
+            if (lastFetchCoords) {
+                const diffLat = Math.abs(item.lat - lastFetchCoords.lat);
+                const diffLng = Math.abs(item.lng - lastFetchCoords.lng);
+                if (diffLat < 0.0005 && diffLng < 0.0005) return;
             }
-        } catch {
-            setAddress('Adresse indisponible');
-        }
-    };
 
-    fetchAddress();
-}, [item.lat, item.lng, lastFetchCoords]);
+            try {
+                const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${item.lat},${item.lng}&key=${GOOGLE_MAPS_API_KEY}&region=MA`;
+                const res = await fetch(url);
+                const data = await res.json();
 
-return (
-    <TouchableOpacity style={styles.card} onPress={() => onPress(item)} activeOpacity={0.7}>
-        <View style={[styles.iconContainer, { backgroundColor: isMoving ? '#ECFDF5' : '#F3F4F6' }]}>
-            <StatusIcon size={24} color={isMoving ? '#10B981' : '#6B7280'} style={iconStyle} />
-        </View>
+                if (data.results?.[0]) {
+                    setAddress(data.results[0].formatted_address.replace(', Maroc', ''));
+                    setLastFetchCoords({ lat: item.lat, lng: item.lng });
+                } else {
+                    setAddress('Adresse inconnue');
+                }
+            } catch {
+                setAddress('Adresse indisponible');
+            }
+        };
 
-        <View style={styles.infoContainer}>
-            <View style={styles.headerRow}>
-                <Text style={styles.name} numberOfLines={1}>{item.name}</Text>
-                {item.alarm && (
-                    <View style={styles.alarmBadge}>
-                        <Text style={styles.alarmText}>{item.alarm}</Text>
-                    </View>
-                )}
+        fetchAddress();
+    }, [item.lat, item.lng, lastFetchCoords]);
+
+    return (
+        <TouchableOpacity style={styles.card} onPress={() => onPress(item)} activeOpacity={0.7}>
+            <View style={[styles.iconContainer, { backgroundColor: isMoving ? '#ECFDF5' : '#F3F4F6' }]}>
+                <StatusIcon size={24} color={isMoving ? '#10B981' : '#6B7280'} style={iconStyle} />
             </View>
 
-            {/* Address */}
-            <View style={styles.row}>
-                <MapPin size={12} color="#9CA3AF" style={{ marginRight: 4, marginTop: 2 }} />
-                <Text style={styles.addressText} numberOfLines={1}>{address}</Text>
-            </View>
-
-            {/* Status Metrics */}
-            <View style={styles.metricsRow}>
-                <View style={styles.metricItem}>
-                    <View style={[styles.statusDot, { backgroundColor: isMoving ? '#10B981' : '#EF4444' }]} />
-                    <Text style={styles.metricText}>
-                        {isMoving ? `${Math.round(item.speed)} km/h` : 'Stationné'}
-                    </Text>
+            <View style={styles.infoContainer}>
+                <View style={styles.headerRow}>
+                    <Text style={styles.name} numberOfLines={1}>{item.name}</Text>
+                    {item.alarm && (
+                        <View style={styles.alarmBadge}>
+                            <Text style={styles.alarmText}>{item.alarm}</Text>
+                        </View>
+                    )}
                 </View>
 
-                {durationStr ? (
+                {/* Address */}
+                <View style={styles.row}>
+                    <MapPin size={12} color="#9CA3AF" style={{ marginRight: 4, marginTop: 2 }} />
+                    <Text style={styles.addressText} numberOfLines={1}>{address}</Text>
+                </View>
+
+                {/* Status Metrics */}
+                <View style={styles.metricsRow}>
                     <View style={styles.metricItem}>
-                        <Text style={styles.metricText}>{durationStr}</Text>
+                        <View style={[styles.statusDot, { backgroundColor: isMoving ? '#10B981' : '#EF4444' }]} />
+                        <Text style={styles.metricText}>
+                            {isMoving ? `${Math.round(item.speed)} km/h` : 'Stationné'}
+                        </Text>
                     </View>
-                ) : null}
 
-                {/* ACC Status */}
-                <View style={styles.metricItem}>
-                    <Text style={[styles.metricText, { color: item.accStatus ? '#10B981' : '#6B7280' }]}>
-                        {item.accStatus ? 'ACC ON' : 'ACC OFF'}
-                    </Text>
-                </View>
+                    {durationStr ? (
+                        <View style={styles.metricItem}>
+                            <Text style={styles.metricText}>{durationStr}</Text>
+                        </View>
+                    ) : null}
 
-                {/* Network Status (30s Timeout) */}
-                <View style={styles.metricItem}>
-                    <Wifi size={14} color={isOnline ? '#10B981' : '#9CA3AF'} />
-                </View>
+                    {/* ACC Status */}
+                    <View style={styles.metricItem}>
+                        <Text style={[styles.metricText, { color: item.accStatus ? '#10B981' : '#6B7280' }]}>
+                            {item.accStatus ? 'ACC ON' : 'ACC OFF'}
+                        </Text>
+                    </View>
 
-                {/* GPS Status */}
-                <View style={styles.metricItem}>
-                    <Signal size={14} color={item.gpsStatus ? '#10B981' : '#9CA3AF'} />
+                    {/* Network Status (30s Timeout) */}
+                    <View style={styles.metricItem}>
+                        <Wifi size={14} color={isOnline ? '#10B981' : '#9CA3AF'} />
+                    </View>
+
+                    {/* GPS Status */}
+                    <View style={styles.metricItem}>
+                        <Signal size={14} color={item.gpsStatus ? '#10B981' : '#9CA3AF'} />
+                    </View>
                 </View>
             </View>
-        </View>
 
-        <Navigation size={16} color="#D1D5DB" />
-    </TouchableOpacity>
-);
+            <Navigation size={16} color="#D1D5DB" />
+        </TouchableOpacity>
+    );
 });
 FleetItem.displayName = 'FleetItem';
 
