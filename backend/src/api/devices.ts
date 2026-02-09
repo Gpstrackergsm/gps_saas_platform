@@ -22,7 +22,9 @@ router.get('/', authenticateToken, async (req: AuthRequest, res) => {
                 p.course,
                 p.timestamp as last_update,
                 d.current_state,
-                d.state_start_time
+                d.state_start_time,
+                d.internet_status,
+                d.gps_status
             FROM devices d
             LEFT JOIN positions p ON p.id = (
                 SELECT id FROM positions 

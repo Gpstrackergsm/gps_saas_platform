@@ -19,6 +19,9 @@ router.get('/:deviceId/history', authenticateToken, async (req: AuthRequest, res
             params.push(new Date(start as string), new Date(end as string));
         }
 
+        // FILTER INVALID COORDINATES (Fix for "jumping lines")
+        sql += ' AND (lat != 0 AND lng != 0)';
+
         sql += ' ORDER BY timestamp ASC LIMIT 50000'; // Increased limit to cover full day (approx 24 hours of 3s intervals = 28800)
 
         const result = await query(sql, params);

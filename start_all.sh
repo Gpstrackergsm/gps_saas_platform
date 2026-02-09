@@ -67,7 +67,7 @@ echo "Backend running (PID: $BACKEND_PID)"
 # 3. Start Simulator
 sleep 5
 echo "🛰️ Starting GPS Simulator..."
-npx ts-node src/simulator.ts > ../simulator.log 2>&1 &
+python3 simulate_movement_hq.py > ../simulator.log 2>&1 &
 SIMULATOR_PID=$!
 echo "Simulator running (PID: $SIMULATOR_PID)"
 
@@ -91,4 +91,8 @@ fi
 echo "Press Ctrl+C to stop all services."
 
 # Keep script running to maintain background jobs
+echo ""
+echo "📱 To start the Mobile App:"
+echo "   cd mobile && npx expo start"
+echo ""
 wait

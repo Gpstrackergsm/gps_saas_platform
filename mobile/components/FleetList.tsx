@@ -31,16 +31,11 @@ const FleetItem = memo(({ item, onPress }: { item: Vehicle, onPress: (v: Vehicle
     const [address, setAddress] = useState<string>('Localisation...');
     const [lastFetchCoords, setLastFetchCoords] = useState<{ lat: number, lng: number } | null>(null);
 
-    const isMoving = item.speed > 0;
-    const statusColor = isMoving ? '#10B981' : '#F59E0B'; // Green : Amber
+    const isMoving = item.speed > 5; // Standard threshold
+    const statusColor = isMoving ? '#10B981' : '#6B7280'; // Green for moving, Gray for stopped
 
-    // Icon logic
     const StatusIcon = isMoving ? Navigation : CircleParking;
     const iconStyle = isMoving && item.course ? { transform: [{ rotate: `${item.course}deg` }] } : {};
-
-    const timeString = item.lastUpdate instanceof Date
-        ? item.lastUpdate.toLocaleTimeString()
-        : new Date(item.lastUpdate).toLocaleTimeString();
 
     // Duration Logic
     const [durationStr, setDurationStr] = useState('');
@@ -48,71 +43,31 @@ const FleetItem = memo(({ item, onPress }: { item: Vehicle, onPress: (v: Vehicle
     useEffect(() => {
         const updateDuration = () => {
             if (!item.state_start_time) {
-                console.log('[TIMER DEBUG] No state_start_time for', item.name);
                 setDurationStr('');
                 return;
             }
             const start = new Date(item.state_start_time).getTime();
-            const now = new Date().getTime();
-            const diffMs = now - start;
+            const now = Date.now();
+            const diffMs = Math.max(0, now - start);
 
-            console.log('[TIMER DEBUG]', item.name, '| state_start_time:', item.state_start_time, '| start:', start, '| now:', now, '| diff:', diffMs, 'ms');
-
-            if (diffMs < 0) {
-                setDurationStr('0s');
-                return;
-            }
-
-            // Show seconds for debugging
             const totalSeconds = Math.floor(diffMs / 1000);
             const minutes = Math.floor(totalSeconds / 60);
-            const seconds = totalSeconds % 60;
             const hours = Math.floor(minutes / 60);
             const days = Math.floor(hours / 24);
 
-            if (days > 0) {
-                setDurationStr(`${days}j ${hours % 24}h ${minutes % 60}m ${seconds}s`);
-            } else if (hours > 0) {
-                setDurationStr(`${hours}h ${minutes % 60}m ${seconds}s`);
-            } else if (minutes > 0) {
-                setDurationStr(`${minutes}m ${seconds}s`);
-            } else {
-                setDurationStr(`${totalSeconds}s`);
-            }
+            if (days > 0) setDurationStr(`${days}j ${hours % 24}h`);
+            else if (hours > 0) setDurationStr(`${hours}h ${minutes % 60}m`);
+            else setDurationStr(`${minutes}m ${totalSeconds % 60}s`);
         };
 
         updateDuration();
-        const interval = setInterval(updateDuration, 1000); // Update every second
+        const interval = setInterval(updateDuration, 1000);
         return () => clearInterval(interval);
     }, [item.state_start_time]);
 
-    // State Label
-    let stateLabel = '';
-    let stateColor = '#9CA3AF';
-
-    if (item.current_state === 'moving') {
-        stateLabel = 'M';
-        stateColor = '#10B981';
-    } else if (item.current_state === 'idling') {
-        stateLabel = 'Ralenti (Conso)';
-        stateColor = '#F59E0B';
-    } else if (item.current_state === 'parked') {
-        stateLabel = 'Stationné';
-        stateColor = '#6B7280'; // Grey
-        if (item.accStatus) { // "Fix in same place with acc on" - though logic puts this in idling usually? 
-            // Logic says: accel on + speed > 5 = moving. accel on + speed <= 5 = idling. accel off = parked.
-            // But let's respect the user request logic if it differs. 
-            // User: "fix in same place with acc on" -> Idling.
-            // User: "parking after acc off" -> Parked.
-        }
-    } else {
-        stateLabel = isMoving ? 'M' : 'Stationné'; // Fallback
-        stateColor = statusColor;
-    }
-
+    // Geocoding with simple caching
     useEffect(() => {
         const fetchAddress = async () => {
-            // Optimization: Don't refetch if moved less than ~50 meters (approx 0.0005 deg)
             if (lastFetchCoords) {
                 const diffLat = Math.abs(item.lat - lastFetchCoords.lat);
                 const diffLng = Math.abs(item.lng - lastFetchCoords.lng);
@@ -124,19 +79,13 @@ const FleetItem = memo(({ item, onPress }: { item: Vehicle, onPress: (v: Vehicle
                 const res = await fetch(url);
                 const data = await res.json();
 
-                if (data.results && data.results.length > 0) {
-                    // Get a concise address (usually the second result is neighborhood/city, or first formatted)
-                    // Let's take the first one but maybe substring it if too long?
-                    // Actually first one is usually precise "123 Main St, City..."
-                    let addr = data.results[0].formatted_address;
-                    // Simplification: Remove country code if at end
-                    setAddress(addr);
+                if (data.results?.[0]) {
+                    setAddress(data.results[0].formatted_address.replace(', Maroc', ''));
                     setLastFetchCoords({ lat: item.lat, lng: item.lng });
                 } else {
-                    setAddress('Position inconnue');
+                    setAddress('Adresse inconnue');
                 }
-            } catch (error) {
-                console.log('Geocoding error:', error);
+            } catch {
                 setAddress('Adresse indisponible');
             }
         };
@@ -145,67 +94,54 @@ const FleetItem = memo(({ item, onPress }: { item: Vehicle, onPress: (v: Vehicle
     }, [item.lat, item.lng, lastFetchCoords]);
 
     return (
-        <TouchableOpacity style={styles.card} onPress={() => onPress(item)}>
-            <View style={[styles.iconContainer, { backgroundColor: `${statusColor}20` }]}>
-                <StatusIcon size={24} color={statusColor} style={iconStyle} />
+        <TouchableOpacity style={styles.card} onPress={() => onPress(item)} activeOpacity={0.7}>
+            <View style={[styles.iconContainer, { backgroundColor: isMoving ? '#ECFDF5' : '#F3F4F6' }]}>
+                <StatusIcon size={24} color={isMoving ? '#10B981' : '#6B7280'} style={iconStyle} />
             </View>
+
             <View style={styles.infoContainer}>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Text style={[styles.name, { flexShrink: 1 }]} numberOfLines={1}>
-                        {item.name || `Vehicle ${item.id.slice(-4)}`}
-                    </Text>
-                    <View style={{ flexDirection: 'row', marginLeft: 8, alignItems: 'center' }}>
-                        <Signal
-                            size={16}
-                            color={item.internetStatus ? '#10B981' : '#6B7280'}
-                            style={{ marginRight: 6 }}
-                        />
-                        <Wifi
-                            size={16}
-                            color={item.gpsStatus ? '#10B981' : '#6B7280'}
-                        />
-                    </View>
+                <View style={styles.headerRow}>
+                    <Text style={styles.name} numberOfLines={1}>{item.name}</Text>
                     {item.alarm && (
                         <View style={styles.alarmBadge}>
-                            <Text style={styles.alarmText}>{item.alarm.toUpperCase()}</Text>
+                            <Text style={styles.alarmText}>{item.alarm}</Text>
                         </View>
                     )}
                 </View>
 
-                {/* Status & Speed & ACC */}
-                <View style={styles.statusRow}>
-                    <Text style={styles.statusText}>
-                        <Text style={{ color: stateColor }}>{stateLabel}</Text>
-                        {item.trip_distance !== undefined && item.current_state === 'moving' && (
-                            <Text style={{ color: '#7C3AED' }}> {item.trip_distance.toFixed(1)}km</Text>
-                        )}
-                        {durationStr ? <Text style={{ color: '#6B7280', fontWeight: 'normal' }}> ({durationStr})</Text> : ''}
-                    </Text>
+                {/* Address */}
+                <View style={styles.row}>
+                    <MapPin size={12} color="#9CA3AF" style={{ marginRight: 4, marginTop: 2 }} />
+                    <Text style={styles.addressText} numberOfLines={1}>{address}</Text>
+                </View>
+
+                {/* Status Metrics */}
+                <View style={styles.metricsRow}>
+                    <View style={styles.metricItem}>
+                        <View style={[styles.statusDot, { backgroundColor: isMoving ? '#10B981' : '#EF4444' }]} />
+                        <Text style={styles.metricText}>
+                            {isMoving ? `${Math.round(item.speed)} km/h` : 'Stationné'}
+                        </Text>
+                    </View>
+
+                    {durationStr ? (
+                        <>
+                            <Text style={styles.dot}>•</Text>
+                            <Text style={styles.metricText}>{durationStr}</Text>
+                        </>
+                    ) : null}
+
                     <Text style={styles.dot}>•</Text>
-                    <Text style={styles.speed}>{item.speed.toFixed(1)} km/h</Text>
-                    <Text style={styles.dot}>•</Text>
-                    <Text style={[styles.statusText, { color: item.accStatus ? '#10B981' : '#9CA3AF', fontSize: 12 }]}>
+                    <Text style={[styles.metricText, { color: item.accStatus ? '#10B981' : '#9CA3AF' }]}>
                         {item.accStatus ? 'ACC ON' : 'ACC OFF'}
                     </Text>
                 </View>
-
-                {/* Address Row */}
-                <View style={styles.addressRow}>
-                    <MapPin size={12} color="#6B7280" style={{ marginTop: 2, marginRight: 4 }} />
-                    <Text style={styles.addressText} numberOfLines={1}>
-                        {address}
-                    </Text>
-                </View>
-
-                <Text style={styles.lastSeen}>
-                    Dernière mise à jour : {timeString}
-                </Text>
             </View>
-            <Navigation size={20} color="#9CA3AF" />
+
+            <Navigation size={16} color="#D1D5DB" />
         </TouchableOpacity>
     );
 });
-
 FleetItem.displayName = 'FleetItem';
 
 export default function FleetList({ vehicles, onVehiclePress }: FleetListProps) {
@@ -323,5 +259,41 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 10,
         fontWeight: 'bold',
+    },
+    headerRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 4,
+    },
+    row: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 6,
+    },
+    metricsRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+    },
+    metricItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#F9FAFB',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 8,
+        marginRight: 6,
+    },
+    statusDot: {
+        width: 6,
+        height: 6,
+        borderRadius: 3,
+        marginRight: 6,
+    },
+    metricText: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: '#374151',
     },
 });

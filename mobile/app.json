@@ -23,6 +23,10 @@
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
+    "extra": {
+      "apiUrl": "https://gpssaasplatform-production.up.railway.app",
+      "googleMapsApiKey": "AIzaSyBI8V98lmgxJz-NNQdF5c6sEzWkInMp0Uc"
+    },
     "plugins": [
       "expo-router",
       "expo-secure-store"

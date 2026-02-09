@@ -4,10 +4,10 @@ import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import { Map as MapIcon, List, LogOut, Navigation, CircleParking, Calendar, Clock, ChevronRight, Activity, MapPin, Trash2, SlidersHorizontal } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
-import { useSocket } from '../../hooks/useSocket';
+import { useSocket } from '../hooks/useSocket';
 import axios from 'axios';
-import { API_URL } from '../../constants/Config';
-import FleetList from '../../components/FleetList';
+import { API_URL } from '../constants/Config';
+import FleetList from '../components/FleetList';
 // DateTimePicker temporarily removed to prevent native crash
 
 interface Vehicle {
