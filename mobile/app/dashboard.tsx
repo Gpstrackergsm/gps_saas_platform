@@ -49,7 +49,7 @@ export default function Dashboard() {
 
     // Duration Timer Logic for Selected Vehicle
     useEffect(() => {
-        let interval: NodeJS.Timeout;
+        let interval: ReturnType<typeof setInterval>;
 
         if (selectedVehicle && vehicles[selectedVehicle.id]) {
             const v = vehicles[selectedVehicle.id];
@@ -124,7 +124,7 @@ export default function Dashboard() {
         };
 
         fetchDevices();
-        const interval = setInterval(fetchDevices, 30000); // Poll every 30s as fallback
+        const interval: ReturnType<typeof setInterval> = setInterval(fetchDevices, 30000); // Poll every 30s as fallback
         return () => clearInterval(interval);
     }, []);
 
@@ -603,14 +603,65 @@ export default function Dashboard() {
                             <View style={styles.modalBg}>
                                 <View style={styles.modalContent}>
                                     <Text style={styles.modalTitle}>Sélectionner {pickerStep === 'start' ? 'Début' : 'Fin'}</Text>
-                                    <View style={{ height: 200, justifyContent: 'center', alignItems: 'center' }}>
-                                        <Text style={{ color: '#6B7280', textAlign: 'center' }}>
-                                            Recherche du calendrier...
-                                            {"\n"}
-                                            (Nécessite une mise à jour de l'app)
-                                        </Text>
+
+                                    <View style={styles.quickDatesContainer}>
+                                        <TouchableOpacity
+                                            style={styles.quickDateBtn}
+                                            onPress={() => {
+                                                const today = new Date();
+                                                today.setHours(0, 0, 0, 0);
+                                                onDateSelect(today);
+                                            }}
+                                        >
+                                            <Text style={styles.quickDateText}>Aujourd'hui</Text>
+                                        </TouchableOpacity>
+
+                                        <TouchableOpacity
+                                            style={styles.quickDateBtn}
+                                            onPress={() => {
+                                                const yesterday = new Date();
+                                                yesterday.setDate(yesterday.getDate() - 1);
+                                                yesterday.setHours(0, 0, 0, 0);
+                                                onDateSelect(yesterday);
+                                            }}
+                                        >
+                                            <Text style={styles.quickDateText}>Hier</Text>
+                                        </TouchableOpacity>
+
+                                        <TouchableOpacity
+                                            style={styles.quickDateBtn}
+                                            onPress={() => {
+                                                const week = new Date();
+                                                week.setDate(week.getDate() - 7);
+                                                week.setHours(0, 0, 0, 0);
+                                                onDateSelect(week);
+                                            }}
+                                        >
+                                            <Text style={styles.quickDateText}>-7 jours</Text>
+                                        </TouchableOpacity>
+
+                                        <TouchableOpacity
+                                            style={styles.quickDateBtn}
+                                            onPress={() => {
+                                                const month = new Date();
+                                                month.setDate(month.getDate() - 30);
+                                                month.setHours(0, 0, 0, 0);
+                                                onDateSelect(month);
+                                            }}
+                                        >
+                                            <Text style={styles.quickDateText}>-30 jours</Text>
+                                        </TouchableOpacity>
                                     </View>
-                                    <TouchableOpacity style={styles.closeBtn} onPress={() => setDatePickerVisible(false)}>
+
+                                    <Text style={styles.dateHint}>
+                                        {pickerStep === 'start' ? 'Étape 1/2: Sélectionnez la date de début' : 'Étape 2/2: Sélectionnez la date de fin'}
+                                    </Text>
+
+                                    <TouchableOpacity style={styles.closeBtn} onPress={() => {
+                                        setDatePickerVisible(false);
+                                        setPickerStep('start');
+                                        setCustomStartDate(null);
+                                    }}>
                                         <Text style={styles.closeBtnText}>Annuler</Text>
                                     </TouchableOpacity>
                                 </View>
@@ -671,6 +722,17 @@ const styles = StyleSheet.create({
     modalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
     modalContent: { backgroundColor: 'white', borderRadius: 24, padding: 24, width: '85%' },
     modalTitle: { fontSize: 18, fontWeight: 'bold', textAlign: 'center', marginBottom: 16 },
+    quickDatesContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, justifyContent: 'center', marginBottom: 20 },
+    quickDateBtn: {
+        backgroundColor: '#4F46E5',
+        paddingHorizontal: 20,
+        paddingVertical: 12,
+        borderRadius: 12,
+        minWidth: '45%',
+        alignItems: 'center'
+    },
+    quickDateText: { color: '#FFF', fontWeight: '600', fontSize: 13 },
+    dateHint: { fontSize: 12, color: '#9CA3AF', textAlign: 'center', marginBottom: 8, fontStyle: 'italic' },
     closeBtn: { marginTop: 16, padding: 12, alignItems: 'center' },
     closeBtnText: { color: '#6B7280', fontWeight: '600' }
 });
