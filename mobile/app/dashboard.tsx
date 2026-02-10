@@ -608,17 +608,6 @@ export default function Dashboard() {
                                         <TouchableOpacity
                                             style={styles.quickDateBtn}
                                             onPress={() => {
-                                                const today = new Date();
-                                                today.setHours(0, 0, 0, 0);
-                                                onDateSelect(today);
-                                            }}
-                                        >
-                                            <Text style={styles.quickDateText}>Aujourd'hui</Text>
-                                        </TouchableOpacity>
-
-                                        <TouchableOpacity
-                                            style={styles.quickDateBtn}
-                                            onPress={() => {
                                                 const yesterday = new Date();
                                                 yesterday.setDate(yesterday.getDate() - 1);
                                                 yesterday.setHours(0, 0, 0, 0);
