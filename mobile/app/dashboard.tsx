@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, ScrollView, SafeAreaView, Platform, Dimensions, Alert, Modal } from 'react-native';
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
-import { Map as MapIcon, List, LogOut, Navigation, CircleParking, Calendar, Clock, ChevronRight, Activity, MapPin, Trash2, SlidersHorizontal } from 'lucide-react-native';
+import { Map as MapIcon, List, LogOut, Navigation, CircleParking, Calendar, Clock, ChevronRight, Activity, MapPin, Trash2, SlidersHorizontal, Play, Pause } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { useSocket } from '../hooks/useSocket';
@@ -188,6 +188,12 @@ export default function Dashboard() {
     const [datePickerVisible, setDatePickerVisible] = useState(false);
     const [selectedPoints, setSelectedPoints] = useState<HistoryPoint[]>([]);
 
+    // Play Trajectory State
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [playbackIndex, setPlaybackIndex] = useState(0);
+    const [playbackSpeed, setPlaybackSpeed] = useState(1); // 1x, 2x, 4x
+
+
     const fetchHistoryDirect = async (vehicleId: string, start: Date, end: Date) => {
         try {
             let token;
@@ -297,9 +303,41 @@ export default function Dashboard() {
         }
     };
 
+    // Play Trajectory Animation
+    useEffect(() => {
+        if (!isPlaying || historyPath.length === 0) return;
+
+        const interval: ReturnType<typeof setInterval> = setInterval(() => {
+            setPlaybackIndex(prevIndex => {
+                const nextIndex = prevIndex + 1;
+                if (nextIndex >= historyPath.length) {
+                    setIsPlaying(false);
+                    return 0; // Reset to start
+                }
+
+                // Animate map to follow playback marker
+                const point = historyPath[nextIndex];
+                if (mapRef.current && point) {
+                    mapRef.current.animateToRegion({
+                        latitude: point.latitude,
+                        longitude: point.longitude,
+                        latitudeDelta: 0.01,
+                        longitudeDelta: 0.01
+                    }, 300);
+                }
+
+                return nextIndex;
+            });
+        }, 500 / playbackSpeed); // Faster interval with higher speed
+
+        return () => clearInterval(interval);
+    }, [isPlaying, historyPath, playbackSpeed]);
+
     const handleVehiclePress = (vehicle: Vehicle) => {
         setSelectedVehicle(vehicle);
         setHistoryPath([]); // Clear previous history when selecting new vehicle
+        setIsPlaying(false); // Stop any playing animation
+        setPlaybackIndex(0);
         setViewMode('map');
     };
 
@@ -530,6 +568,21 @@ export default function Dashboard() {
                                     })}
                                 </>
                             )}
+
+                            {/* Playback Marker - shows current position during playback */}
+                            {isPlaying && historyPath[playbackIndex] && (
+                                <Marker
+                                    coordinate={{
+                                        latitude: historyPath[playbackIndex].latitude,
+                                        longitude: historyPath[playbackIndex].longitude
+                                    }}
+                                    anchor={{ x: 0.5, y: 0.5 }}
+                                >
+                                    <View style={styles.playbackMarker}>
+                                        <Navigation size={28} color="#10B981" fill="#10B981" />
+                                    </View>
+                                </Marker>
+                            )}
                         </MapView>
 
                         {/* History Controls Overlay */}
@@ -560,6 +613,37 @@ export default function Dashboard() {
                                             <Calendar size={14} color="#FFF" />
                                         </TouchableOpacity>
                                     </View>
+
+                                    {/* Playback Controls */}
+                                    {historyPath.length > 0 && (
+                                        <View style={styles.playbackControls}>
+                                            <TouchableOpacity
+                                                style={styles.playBtn}
+                                                onPress={() => setIsPlaying(!isPlaying)}
+                                            >
+                                                {isPlaying ? (
+                                                    <Pause size={16} color="#FFF" fill="#FFF" />
+                                                ) : (
+                                                    <Play size={16} color="#FFF" fill="#FFF" />
+                                                )}
+                                            </TouchableOpacity>
+
+                                            <View style={styles.playbackInfo}>
+                                                <Text style={styles.playbackText}>
+                                                    {playbackIndex}/{historyPath.length}
+                                                </Text>
+                                            </View>
+
+                                            <TouchableOpacity
+                                                style={styles.speedBtn}
+                                                onPress={() => {
+                                                    setPlaybackSpeed(prev => prev === 1 ? 2 : prev === 2 ? 4 : 1);
+                                                }}
+                                            >
+                                                <Text style={styles.speedText}>{playbackSpeed}x</Text>
+                                            </TouchableOpacity>
+                                        </View>
+                                    )}
 
                                     {distanceData && (
                                         <View style={styles.analysisBox}>
@@ -709,5 +793,58 @@ const styles = StyleSheet.create({
     quickDateText: { color: '#FFF', fontWeight: '600', fontSize: 13 },
     dateHint: { fontSize: 12, color: '#9CA3AF', textAlign: 'center', marginBottom: 8, fontStyle: 'italic' },
     closeBtn: { marginTop: 16, padding: 12, alignItems: 'center' },
-    closeBtnText: { color: '#6B7280', fontWeight: '600' }
+    closeBtnText: { color: '#6B7280', fontWeight: '600' },
+    // Playback Styles
+    playbackMarker: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: 'white',
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        elevation: 5,
+        borderWidth: 3,
+        borderColor: '#10B981'
+    },
+    playbackControls: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+        marginTop: 12,
+        paddingTop: 12,
+        borderTopWidth: 1,
+        borderTopColor: '#E5E7EB'
+    },
+    playBtn: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: '#10B981',
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+    playbackInfo: {
+        flex: 1,
+        alignItems: 'center'
+    },
+    playbackText: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: '#6B7280'
+    },
+    speedBtn: {
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 8,
+        backgroundColor: '#F3F4F6'
+    },
+    speedText: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: '#4F46E5'
+    }
 });
