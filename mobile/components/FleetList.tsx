@@ -110,12 +110,17 @@ const FleetItem = memo(({ item, onPress }: { item: Vehicle, onPress: (v: Vehicle
 
             <View style={styles.infoContainer}>
                 <View style={styles.headerRow}>
-                    <Text style={styles.name} numberOfLines={1}>{item.name}</Text>
-                    {item.alarm && (
-                        <View style={styles.alarmBadge}>
-                            <Text style={styles.alarmText}>{item.alarm}</Text>
-                        </View>
-                    )}
+                    <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+                        <Text style={styles.name} numberOfLines={1}>{item.name}</Text>
+                        {item.alarm && (
+                            <View style={styles.alarmBadge}>
+                                <Text style={styles.alarmText}>{item.alarm}</Text>
+                            </View>
+                        )}
+                    </View>
+                    <Text style={styles.lastUpdateText}>
+                        {new Date(item.lastUpdate).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })} {new Date(item.lastUpdate).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                    </Text>
                 </View>
 
                 {/* Address */}
@@ -315,5 +320,11 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontWeight: '600',
         color: '#374151',
+    },
+    lastUpdateText: {
+        fontSize: 11,
+        color: '#6B7280',
+        fontWeight: '500',
+        marginLeft: 8,
     },
 });
