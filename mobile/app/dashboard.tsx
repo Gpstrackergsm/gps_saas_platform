@@ -128,6 +128,8 @@ export default function Dashboard() {
         return () => clearInterval(interval);
     }, []);
 
+
+
     // Socket updates
     useEffect(() => {
         if (!socket) return;
@@ -152,10 +154,11 @@ export default function Dashboard() {
                     trip_distance: data.tripDistance,
                     course: data.course,
                     alarm: data.alarm,
+
                     accStatus: data.accStatus,
-                    lastUpdate: new Date(),
+                    lastUpdate: data.timestamp ? new Date(data.timestamp) : new Date(),
                     status: 'online',
-                    last_update: new Date().toISOString(),
+                    last_update: data.timestamp ? new Date(data.timestamp).toISOString() : new Date().toISOString(),
                     current_state: data.state, // Socket uses 'state'
                     state_start_time: newStateStartTime, // Only update if state changed!
                     internetStatus: data.internetStatus,
@@ -455,11 +458,7 @@ export default function Dashboard() {
                             {viewMode === 'list' ? 'Suivi de Flotte' : (selectedVehicle ? selectedVehicle.name : 'Carte')}
                         </Text>
 
-                        {viewMode === 'list' && (
-                            <Text style={styles.headerDate}>
-                                {currentTime.toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: 'short' })} {currentTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-                            </Text>
-                        )}
+
 
                         {viewMode === 'map' && selectedVehicle && vehicles[selectedVehicle.id] && (
                             <View style={{ marginTop: 2 }}>
@@ -885,11 +884,5 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontWeight: '600',
         color: '#4F46E5'
-    },
-    headerDate: {
-        fontSize: 12,
-        color: '#6B7280',
-        marginTop: 4,
-        fontWeight: '500'
     }
 });
