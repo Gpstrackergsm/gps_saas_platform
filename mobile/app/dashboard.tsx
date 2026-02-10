@@ -587,10 +587,15 @@ export default function Dashboard() {
                                         <TouchableOpacity
                                             style={styles.quickDateBtn}
                                             onPress={() => {
-                                                const yesterday = new Date();
-                                                yesterday.setDate(yesterday.getDate() - 1);
-                                                yesterday.setHours(0, 0, 0, 0);
-                                                onDateSelect(yesterday);
+                                                if (selectedVehicle) {
+                                                    const yesterday = new Date();
+                                                    yesterday.setDate(yesterday.getDate() - 1);
+                                                    yesterday.setHours(0, 0, 0, 0);
+                                                    const endOfYesterday = new Date(yesterday);
+                                                    endOfYesterday.setHours(23, 59, 59, 999);
+                                                    setDatePickerVisible(false);
+                                                    fetchHistoryDirect(selectedVehicle.id, yesterday, endOfYesterday);
+                                                }
                                             }}
                                         >
                                             <Text style={styles.quickDateText}>Hier</Text>
@@ -599,10 +604,14 @@ export default function Dashboard() {
                                         <TouchableOpacity
                                             style={styles.quickDateBtn}
                                             onPress={() => {
-                                                const week = new Date();
-                                                week.setDate(week.getDate() - 7);
-                                                week.setHours(0, 0, 0, 0);
-                                                onDateSelect(week);
+                                                if (selectedVehicle) {
+                                                    const week = new Date();
+                                                    week.setDate(week.getDate() - 7);
+                                                    week.setHours(0, 0, 0, 0);
+                                                    const now = new Date();
+                                                    setDatePickerVisible(false);
+                                                    fetchHistoryDirect(selectedVehicle.id, week, now);
+                                                }
                                             }}
                                         >
                                             <Text style={styles.quickDateText}>-7 jours</Text>
@@ -611,10 +620,14 @@ export default function Dashboard() {
                                         <TouchableOpacity
                                             style={styles.quickDateBtn}
                                             onPress={() => {
-                                                const month = new Date();
-                                                month.setDate(month.getDate() - 30);
-                                                month.setHours(0, 0, 0, 0);
-                                                onDateSelect(month);
+                                                if (selectedVehicle) {
+                                                    const month = new Date();
+                                                    month.setDate(month.getDate() - 30);
+                                                    month.setHours(0, 0, 0, 0);
+                                                    const now = new Date();
+                                                    setDatePickerVisible(false);
+                                                    fetchHistoryDirect(selectedVehicle.id, month, now);
+                                                }
                                             }}
                                         >
                                             <Text style={styles.quickDateText}>-30 jours</Text>
