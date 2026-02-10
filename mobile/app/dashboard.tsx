@@ -186,27 +186,7 @@ export default function Dashboard() {
     const [historyPath, setHistoryPath] = useState<HistoryPoint[]>([]);
     const [historySegments, setHistorySegments] = useState<HistoryPoint[][]>([]);
     const [datePickerVisible, setDatePickerVisible] = useState(false);
-    const [pickerStep, setPickerStep] = useState<'start' | 'end'>('start');
-    const [customStartDate, setCustomStartDate] = useState<Date | null>(null);
     const [selectedPoints, setSelectedPoints] = useState<HistoryPoint[]>([]);
-
-    const onDateSelect = (date: Date) => {
-        if (pickerStep === 'start') {
-            setCustomStartDate(date);
-            setPickerStep('end');
-        } else {
-            setDatePickerVisible(false);
-            if (customStartDate && selectedVehicle) {
-                const start = customStartDate;
-                start.setHours(0, 0, 0, 0); // Start of start day
-
-                const end = date;
-                end.setHours(23, 59, 59, 999); // End of end day
-
-                fetchHistoryDirect(selectedVehicle.id, start, end);
-            }
-        }
-    };
 
     const fetchHistoryDirect = async (vehicleId: string, start: Date, end: Date) => {
         try {
@@ -292,7 +272,6 @@ export default function Dashboard() {
             let start = new Date();
 
             if (period === 'custom') {
-                setPickerStep('start');
                 setDatePickerVisible(true);
                 return;
             }
@@ -602,7 +581,7 @@ export default function Dashboard() {
                         <Modal visible={datePickerVisible} transparent animationType="fade">
                             <View style={styles.modalBg}>
                                 <View style={styles.modalContent}>
-                                    <Text style={styles.modalTitle}>Sélectionner {pickerStep === 'start' ? 'Début' : 'Fin'}</Text>
+                                    <Text style={styles.modalTitle}>Sélectionner une période</Text>
 
                                     <View style={styles.quickDatesContainer}>
                                         <TouchableOpacity
@@ -642,15 +621,9 @@ export default function Dashboard() {
                                         </TouchableOpacity>
                                     </View>
 
-                                    <Text style={styles.dateHint}>
-                                        {pickerStep === 'start' ? 'Étape 1/2: Sélectionnez la date de début' : 'Étape 2/2: Sélectionnez la date de fin'}
-                                    </Text>
 
-                                    <TouchableOpacity style={styles.closeBtn} onPress={() => {
-                                        setDatePickerVisible(false);
-                                        setPickerStep('start');
-                                        setCustomStartDate(null);
-                                    }}>
+
+                                    <TouchableOpacity style={styles.closeBtn} onPress={() => setDatePickerVisible(false)}>
                                         <Text style={styles.closeBtnText}>Annuler</Text>
                                     </TouchableOpacity>
                                 </View>
