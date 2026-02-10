@@ -341,6 +341,34 @@ export default function Dashboard() {
         setViewMode('map');
     };
 
+    // Format time duration for playback display
+    const formatPlaybackTime = (ms: number): string => {
+        const totalSeconds = Math.floor(ms / 1000);
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    };
+
+    // Calculate playback times
+    const getPlaybackTimes = () => {
+        if (historyPath.length === 0) return { elapsed: '00:00', total: '00:00' };
+
+        const startTime = new Date(historyPath[0].timestamp).getTime();
+        const endTime = new Date(historyPath[historyPath.length - 1].timestamp).getTime();
+        const currentTime = playbackIndex < historyPath.length
+            ? new Date(historyPath[playbackIndex].timestamp).getTime()
+            : endTime;
+
+        const elapsedMs = currentTime - startTime;
+        const totalMs = endTime - startTime;
+
+        return {
+            elapsed: formatPlaybackTime(elapsedMs),
+            total: formatPlaybackTime(totalMs)
+        };
+    };
+
+
     // Effect to handle map animation when switching views or when vehicle position updates
     useEffect(() => {
         if (viewMode === 'map' && selectedVehicle && mapRef.current && vehicles[selectedVehicle.id]) {
@@ -630,7 +658,7 @@ export default function Dashboard() {
 
                                             <View style={styles.playbackInfo}>
                                                 <Text style={styles.playbackText}>
-                                                    {playbackIndex}/{historyPath.length}
+                                                    {getPlaybackTimes().elapsed} / {getPlaybackTimes().total}
                                                 </Text>
                                             </View>
 
