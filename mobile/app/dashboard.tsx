@@ -455,6 +455,12 @@ export default function Dashboard() {
                             {viewMode === 'list' ? 'Suivi de Flotte' : (selectedVehicle ? selectedVehicle.name : 'Carte')}
                         </Text>
 
+                        {viewMode === 'list' && (
+                            <Text style={styles.headerDate}>
+                                {currentTime.toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: 'short' })} {currentTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                            </Text>
+                        )}
+
                         {viewMode === 'map' && selectedVehicle && vehicles[selectedVehicle.id] && (
                             <View style={{ marginTop: 2 }}>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -879,5 +885,11 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontWeight: '600',
         color: '#4F46E5'
+    },
+    headerDate: {
+        fontSize: 12,
+        color: '#6B7280',
+        marginTop: 4,
+        fontWeight: '500'
     }
 });
