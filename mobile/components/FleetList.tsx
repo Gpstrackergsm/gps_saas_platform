@@ -55,7 +55,11 @@ const FleetItem = memo(({ item, onPress }: { item: Vehicle, onPress: (v: Vehicle
                 return;
             }
             const start = new Date(item.state_start_time).getTime();
-            const diffMs = Math.max(0, now - start);
+            const lastUpdateTs = item.lastUpdate ? new Date(item.lastUpdate).getTime() : now;
+
+            // Handle clock skew: use max of (now - start) and (lastUpdate - start)
+            // This ensures we always show at least the server-reported duration
+            const diffMs = Math.max(0, Math.max(now - start, lastUpdateTs - start));
 
             const totalSeconds = Math.floor(diffMs / 1000);
             const minutes = Math.floor(totalSeconds / 60);

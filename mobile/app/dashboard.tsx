@@ -156,9 +156,9 @@ export default function Dashboard() {
                     alarm: data.alarm,
 
                     accStatus: data.accStatus,
-                    lastUpdate: data.timestamp ? new Date(data.timestamp) : new Date(),
+                    lastUpdate: data.lastUpdate ? new Date(data.lastUpdate) : new Date(),
                     status: 'online',
-                    last_update: data.timestamp ? new Date(data.timestamp).toISOString() : new Date().toISOString(),
+                    last_update: data.lastUpdate ? new Date(data.lastUpdate).toISOString() : new Date().toISOString(),
                     current_state: data.state, // Socket uses 'state'
                     state_start_time: newStateStartTime, // Only update if state changed!
                     internetStatus: data.internetStatus,
