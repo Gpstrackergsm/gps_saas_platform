@@ -20,7 +20,7 @@ WAYPOINTS = [
 
 current_point_idx = 0
 progress = 0.0
-SPEED_FACTOR = 0.02 
+SPEED_FACTOR = 0.10 
 
 # Scenario State Machine
 SCENARIO_step = 0
@@ -51,7 +51,7 @@ def format_coord(coord, is_lat):
     return formatted, direction
 
 def send_update(sock, lat, lng, speed, course, acc_on, door_open, alarm_type=None):
-    now = datetime.utcnow()
+    now = datetime.now()  # Changed from utcnow() to now() for local time
     date_str = now.strftime("%d%m%y")
     time_str = now.strftime("%H%M%S")
     
@@ -116,18 +116,18 @@ def main():
             lat, lng = interpolate(p1, p2, progress)
             course = get_bearing(p1[0], p1[1], p2[0], p2[1])
 
-            if 40 <= SCENARIO_cycle < 55:
-                # Idling (Traffic / Stop light)
+            if 40 <= SCENARIO_cycle < 45:
+                # Idling (Traffic / Stop light) - Reduced to 5 cycles (10s)
                 # Verify "Ralenti (Conso)"
                 speed = 0.0
                 acc_on = True 
-            elif 55 <= SCENARIO_cycle < 75:
-                # Parked
+            elif 45 <= SCENARIO_cycle < 50:
+                # Parked - Reduced to 5 cycles (10s)
                 speed = 0.0
                 acc_on = False # Engine Off
                 # Dont advance progress
-            elif 75 <= SCENARIO_cycle < 80:
-                # SOS Event!
+            elif 50 <= SCENARIO_cycle < 52:
+                # SOS Event! - Reduced to 2 cycles
                 speed = 0.0
                 acc_on = True
                 alarm = 'sos'
